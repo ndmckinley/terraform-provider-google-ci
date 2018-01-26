@@ -9,9 +9,10 @@ image_resource:
 
 inputs:
     - name: magic-modules
+    - name: ci
 
 outputs:
     - name: mm-output
 
 run:
-    path: magic-modules/ci/generate_terraform.sh
+    path: ci/magic-modules/generate_terraform.sh

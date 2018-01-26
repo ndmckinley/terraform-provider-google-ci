@@ -1,6 +1,6 @@
 platform: linux
 inputs:
-  - name: terraform-provider-google
+  - name: terraform-intermediate
   - name: ci
 image_resource:
   type: docker-image

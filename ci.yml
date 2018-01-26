@@ -9,7 +9,7 @@ resources:
       type: git
       source:
           uri: git@github.com:ndmckinley/magic-modules.git
-          branch: ci-server
+          branch: master
           private_key: ((repo_key))
 
     - name: terraform-intermediate
@@ -37,19 +37,27 @@ resources:
 jobs:
     - name: mm-generate
       plan:
-          - get: magic-modules
-            params:
-                submodules: [build/terraform]
+          - aggregate:
+              - get: magic-modules
+                params:
+                    submodules: [build/terraform]
+                    rebase: true
+              - get: ci
           - task: generate
-            file: magic-modules/ci/generate.yml
+            file: ci/magic-modules/generate.yml
           - put: terraform-intermediate
             params:
                 repository: mm-output/build/terraform
 
     - name: terraform-test
       plan:
-          - get: terraform-intermediate
+          - aggregate:
+              - get: ci
+              - get: terraform-intermediate
             passed: [mm-generate]
           - task: test
             file: ci/unit-tests/task.yml
           - put: terraform-pr
+            params:
+                path: terraform-intermediate
+                status: pending
