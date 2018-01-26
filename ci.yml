@@ -1,0 +1,55 @@
+resource_types:
+    - name: pull-request
+      type: docker-image
+      source:
+          repository: jtarchie/pr
+
+resources:
+    - name: magic-modules
+      type: git
+      source:
+          uri: git@github.com:ndmckinley/magic-modules.git
+          branch: ci-server
+          private_key: ((repo_key))
+
+    - name: terraform-intermediate
+      type: git
+      source:
+          uri: git@github.com:ndmckinley/terraform-provider-google.git
+          branch: magic_modules
+          private_key: ((repo_key))
+
+    - name: terraform-pr
+      type: pull-request
+      source:
+          access_token: ((repo_access))
+          private_key: ((repo_key))
+          repo: ndmckinley/terraform-provider-google
+          base: magic_modules
+
+    - name: ci
+      type: git
+      source:
+          uri: git@github.com:ndmckinley/terraform-provider-google-ci.git
+          branch: master
+          private_key: ((repo_key))
+
+jobs:
+    - name: mm-generate
+      plan:
+          - get: magic-modules
+            params:
+                submodules: [build/terraform]
+          - task: generate
+            file: magic-modules/ci/generate.yml
+          - put: terraform-intermediate
+            params:
+                repository: mm-output/build/terraform
+
+    - name: terraform-test
+      plan:
+          - get: terraform-intermediate
+            passed: [mm-generate]
+          - task: test
+            file: ci/unit-tests/task.yml
+          - put: terraform-pr
