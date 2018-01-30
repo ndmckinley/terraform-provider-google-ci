@@ -1,6 +1,6 @@
 platform: linux
 inputs:
-  - name: terraform-intermediate
+  - name: magic-modules
   - name: ci
 image_resource:
   type: docker-image

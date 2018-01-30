@@ -19,17 +19,30 @@ cd "${GOPATH}/src/github.com/terraform-providers/terraform-provider-google"
 go get
 
 cd "${WORKDIR}/magic-modules"
+BRANCH_AND_TAG=$(git rev-parse --short HEAD)
 
 bundle install
 bundle exec ruby compiler.rb -p products/compute -e terraform -o "${GOPATH}/src/github.com/terraform-providers/terraform-provider-google/google/" -t BackendBucket
 
 cd "build/terraform"
 git add -A
-git config user.email "nmckinley@google.com"
-git config user.name "Magic Module Bot"
+git config --global user.email "nmckinley@google.com"
+git config --global user.name "Magic Module Bot"
 git commit -m "magic modules change happened here"
-git checkout -B magic_modules
+git checkout -B $BRANCH_AND_TAG
 
 cd "../../"
+git config -f .gitmodules submodule.build/terraform.branch $BRANCH_AND_TAG
+git config -f .gitmodules submodule.build/terraform.url "git@github.com:ndmckinley/terraform-provider-google.git"
+
+# ./tag is intentionally not committed - but run *before* the commit, because it should contain the hash of
+# the commit which kicked off this process, *not* the resulting commit.
+echo "mm-$BRANCH_AND_TAG" > ./tag
+echo "$BRANCH_AND_TAG" > ./branchname
+
+git add build/terraform
+git add .gitmodules
+git commit -m "update terraform."
+git checkout -B $BRANCH_AND_TAG
 
 cp -r ./ "${WORKDIR}/mm-output/"
