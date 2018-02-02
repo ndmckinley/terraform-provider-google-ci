@@ -19,7 +19,7 @@ cd "${GOPATH}/src/github.com/terraform-providers/terraform-provider-google"
 go get
 
 cd "${WORKDIR}/magic-modules"
-BRANCH_AND_TAG=$(git rev-parse --short HEAD)
+BRANCH=$(git rev-parse --short HEAD)
 
 bundle install
 bundle exec ruby compiler.rb -p products/compute -e terraform -o "${GOPATH}/src/github.com/terraform-providers/terraform-provider-google/google/" -t BackendBucket
@@ -28,21 +28,21 @@ cd "build/terraform"
 git add -A
 git config --global user.email "nmckinley@google.com"
 git config --global user.name "Magic Module Bot"
-git commit -m "magic modules change happened here"
-git checkout -B $BRANCH_AND_TAG
+git commit -m "magic modules change happened here" || true  # don't crash if no changes
+git checkout -B $BRANCH
 
 cd "../../"
-git config -f .gitmodules submodule.build/terraform.branch $BRANCH_AND_TAG
+git config -f .gitmodules submodule.build/terraform.branch $BRANCH
 git config -f .gitmodules submodule.build/terraform.url "git@github.com:ndmckinley/terraform-provider-google.git"
+git submodule sync
 
-# ./tag is intentionally not committed - but run *before* the commit, because it should contain the hash of
+# ./branchname is intentionally not committed - but run *before* the commit, because it should contain the hash of
 # the commit which kicked off this process, *not* the resulting commit.
-echo "mm-$BRANCH_AND_TAG" > ./tag
-echo "$BRANCH_AND_TAG" > ./branchname
+echo "$BRANCH" > ./branchname
 
 git add build/terraform
 git add .gitmodules
-git commit -m "update terraform."
-git checkout -B $BRANCH_AND_TAG
+git commit -m "update terraform." || true  # don't crash if no changes
+git checkout -B $BRANCH
 
 cp -r ./ "${WORKDIR}/mm-output/"
