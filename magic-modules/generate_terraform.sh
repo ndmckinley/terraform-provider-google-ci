@@ -22,7 +22,7 @@ cd "${WORKDIR}/magic-modules"
 BRANCH=$(git rev-parse --short HEAD)
 
 bundle install
-bundle exec ruby compiler.rb -p products/compute -e terraform -o "${GOPATH}/src/github.com/terraform-providers/terraform-provider-google/google/" -t BackendBucket
+bundle exec ruby compiler.rb -p products/compute -e terraform -o "${GOPATH}/src/github.com/terraform-providers/terraform-provider-google/"
 
 cd "build/terraform"
 git add -A
