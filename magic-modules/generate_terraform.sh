@@ -33,7 +33,7 @@ git checkout -B $BRANCH
 
 cd "../../"
 git config -f .gitmodules submodule.build/terraform.branch $BRANCH
-git config -f .gitmodules submodule.build/terraform.url "git@github.com:ndmckinley/terraform-provider-google.git"
+git config -f .gitmodules submodule.build/terraform.url "git@github.com:$GH_USERNAME/terraform-provider-google.git"
 git submodule sync
 
 # ./branchname is intentionally not committed - but run *before* the commit, because it should contain the hash of

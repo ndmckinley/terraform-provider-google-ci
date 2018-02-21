@@ -1,69 +1,105 @@
+# These resource types are here until the PRs get merged in upstream.  :)
 resource_types:
     - name: git-branch
       type: docker-image
       source:
           repository: nmckinley/concourse-git-resource
+          tag: v0.1.7
+
+    - name: github-pull-request
+      type: docker-image
+      source:
+          repository: nmckinley/concourse-github-pr-resource
+          tag: v0.1.1
 
 resources:
     - name: magic-modules
-      type: git
+      type: git-branch
       source:
-          uri: git@github.com:ndmckinley/magic-modules.git
-          branch: master
+          uri: git@github.com:((username))/magic-modules.git
           private_key: ((repo_key))
+
+    - name: magic-modules-new-prs
+      type: github-pull-request
+      source:
+          repo: ((username))/magic-modules
+          private_key: ((repo_key))
+          access_token: ((repo_access))
+          only_mergeable: true
+          authorship_restriction: true
 
     - name: terraform-intermediate
       type: git-branch
       source:
-          uri: git@github.com:ndmckinley/terraform-provider-google.git
+          uri: git@github.com:((username))/terraform-provider-google.git
           private_key: ((repo_key))
 
     - name: ci
       type: git
       source:
-          uri: git@github.com:ndmckinley/terraform-provider-google-ci.git
+          uri: git@github.com:((username))/terraform-provider-google-ci.git
           branch: git-pull-resource
           private_key: ((repo_key))
+
+    - name: mm-approved-prs
+      type: github-pull-request
+      source:
+          repo: ((username))/magic-modules
+          private_key: ((repo_key))
+          access_token: ((repo_access))
+          only_mergeable: true
+          require_review_approval: true
+
+    - name: mm-prs-out
+      type: github-pull-request
+      source:
+          repo: ((username))/magic-modules
+          private_key: ((repo_key))
+          access_token: ((repo_access))
+
+    - name: terraform-prs-out
+      type: github-pull-request
+      source:
+          repo: ((username))/terraform-provider-google
+          private_key: ((repo_key))
+          access_token: ((repo_access))
 
 jobs:
     - name: mm-generate
       plan:
           - aggregate:
               - get: magic-modules
+                resource: magic-modules-new-prs
+                version: every
+                # trigger: true
                 params:
                     submodules: [build/terraform]
               - get: ci
           - task: generate
             file: ci/magic-modules/generate.yml
+            params:
+                GH_USERNAME: ((username))
           - put: terraform-intermediate
             params:
                 repository: mm-output/build/terraform
-                tag: mm-output/tag
-                branchfile: mm-output/branchname
-                # The contents of this repo do not matter - this is just a place to
-                # store the submodules of magic-modules so that the commit to
-                # magic-modules can reference it during testing / before
-                # the pull requests are ready.  Since each commit is tagged,
-                # and each magic-modules commit points to a tag & hash rather than
-                # a branch, `git gc` won't remove commits that are "overwritten"
-                # with a force push, and the `magic-modules` branch pointer isn't
-                # useful for anything other than getting this push to talk to
-                # the output of the above `generate` step.  All this to say we can
-                # safely force-push here.
-                force: true
+                branch_file: mm-output/branchname
+                only_if_diff: true
+
           # This needs to go below all the submodules because it has a commit which
           # points to those submodules.
           - put: magic-modules
             params:
                 repository: mm-output
-                branchfile: mm-output/branchname
-                tag: mm-output/tag
+                branch_file: mm-output/branchname
+                only_if_diff: true
 
     - name: terraform-test
       plan:
           - aggregate:
               - get: ci
               - get: magic-modules
+                version: every
+                # trigger: true
                 params:
                     submodules: [build/terraform]
                 passed: [mm-generate]
@@ -72,11 +108,55 @@ jobs:
 
     - name: create-prs
       plan:
-          - aggregate:
-              - get: ci
-              - get: magic-modules
-                params:
-                    submodules: [build/terraform]
-                passed: [terraform-test]
-          - task: create-prs
-            file: ci/create-prs/task.yml
+          - get: ci
+          - get: magic-modules
+            version: every
+            # trigger: true
+            params:
+                submodules: [build/terraform]
+            passed: [terraform-test, mm-generate]
+          - get: mm-initial-pr
+            resource: magic-modules-new-prs
+            passed: [mm-generate]
+            version: every
+          - task: make-pr
+            file: ci/magic-modules/make-pr.yml
+          - put: magic-modules
+            params:
+                branch_file: mm-initial-pr/.git/branch
+                repository: magic-modules-out
+                only_if_diff: true
+          - put: terraform-prs-out
+            params:
+                path: magic-modules-out/build/terraform
+                status: success
+          - task: make-comment
+            file: ci/magic-modules/make-comment.yml
+            params:
+                GH_USERNAME: ((username))
+          - put: mm-prs-out
+            params:
+                status: success
+                path: magic-modules-comment
+                comment: magic-modules-comment/pr_comment
+
+    - name: merge-prs
+      plan:
+          - get: mm-approved-prs
+          - get: ci
+          - task: merge-and-update
+            file: ci/magic-modules/merge.yml
+            params:
+                CREDS: ((repo_key))
+          - put: magic-modules
+            params:
+                repository: mm-output
+                branch_file: mm-approved-prs/.git/branch
+                only_if_diff: true
+          - put: mm-approved-prs
+            params:
+                path: mm-output
+                status: success
+                merge:
+                    method: squash
+                    commit_msg: mm-output/commit_message

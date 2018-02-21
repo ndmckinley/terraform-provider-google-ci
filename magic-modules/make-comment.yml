@@ -18,3 +18,6 @@ outputs:
 
 run:
     path: ci/magic-modules/make-comment.sh
+
+params:
+    GH_USERNAME: ""

@@ -24,5 +24,5 @@ cat << EOF > ./pr_comment
 I am a robot that works on MagicModules PRs!
 
 I built this PR into one or more PRs on other repositories, and when those are closed, this PR will also be merged and closed.
-depends: https://github.com/ndmckinley/terraform-provider-google/pull/$TF_PR
+depends: https://github.com/$GH_USERNAME/terraform-provider-google/pull/$TF_PR
 EOF

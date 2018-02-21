@@ -8,14 +8,14 @@ image_resource:
         tag: '1.9-2.5'
 
 inputs:
-    - name: magic-modules
+    - name: mm-approved-prs
     - name: ci
 
 outputs:
     - name: mm-output
 
 run:
-    path: ci/magic-modules/generate_terraform.sh
+    path: ci/magic-modules/merge-pr.sh
 
 params:
-    GH_USERNAME: ""
+    CREDS: ""
