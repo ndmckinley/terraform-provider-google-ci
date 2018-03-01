@@ -20,8 +20,8 @@ popd
 cp -r mm-approved-prs/* mm-output
 
 pushd mm-output
-git config pullrequest.id $ID
-git checkout $BRANCH
+git config pullrequest.id "$ID"
+git checkout "$BRANCH"
 git config --global user.email "magic-modules@google.com"
 git config --global user.name "Modular Magician"
 git config -f .gitmodules submodule.build/terraform.branch master
@@ -31,5 +31,5 @@ ssh-agent bash -c "ssh-add ~/github_private_key; git submodule update --remote -
 git add build/terraform
 git add .gitmodules
 
-git commit -m "Update terraform -> HEAD on `date`"
+git commit -m "Update terraform -> HEAD on $(date)"
 echo "Merged PR #$ID." > ./commit_message

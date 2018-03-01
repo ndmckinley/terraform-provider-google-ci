@@ -15,10 +15,10 @@ cp -r magic-modules/* magic-modules-out
 cd magic-modules-out
 
 # This says "check out the branch which contains HEAD, and set it up to track its upstream."
-git checkout -t $(git branch -a --contains $(git rev-parse HEAD) | grep -v "detached")
+git checkout -t "$(git branch -a --contains "$(git rev-parse HEAD)" | grep -v "detached")"
 
 cd build/terraform
 
-git checkout -t $(git branch -a --contains $(git rev-parse HEAD) | grep -v "detached")
+git checkout -t "$(git branch -a --contains "$(git rev-parse HEAD)" | grep -v "detached")"
 # This special string 'new' tells the PR resource to create a new PR.
 git config pullrequest.id new

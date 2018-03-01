@@ -18,7 +18,7 @@ popd
 cp -r magic-modules-out/* magic-modules-comment
 
 pushd magic-modules-comment
-git config pullrequest.id $ID
+git config pullrequest.id "$ID"
 cat << EOF > ./pr_comment 
 I am a robot that works on MagicModules PRs!
 

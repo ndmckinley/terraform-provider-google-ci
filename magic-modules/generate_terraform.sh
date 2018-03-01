@@ -37,10 +37,10 @@ git config --global user.email "magic-modules@google.com"
 git config --global user.name "Modular Magician"
 git commit -m "magic modules change happened here" || true  # don't crash if no changes
 # TODO(@ndmckinley): A better message that comes from the body of the magic-modules PR.
-git checkout -B $BRANCH
+git checkout -B "$BRANCH"
 popd
 
-git config -f .gitmodules submodule.build/terraform.branch $BRANCH
+git config -f .gitmodules submodule.build/terraform.branch "$BRANCH"
 git config -f .gitmodules submodule.build/terraform.url "git@github.com:$GH_USERNAME/terraform-provider-google.git"
 git submodule sync build/terraform
 
@@ -52,6 +52,6 @@ git add build/terraform
 git add .gitmodules
 git commit -m "update terraform." || true  # don't crash if no changes
 # TODO(@ndmckinley): A better message that comes from the body of the magic-modules PR.
-git checkout -B $BRANCH
+git checkout -B "$BRANCH"
 
 cp -r ./ "${WORKDIR}/mm-output/"
