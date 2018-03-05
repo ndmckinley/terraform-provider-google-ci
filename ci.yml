@@ -110,6 +110,7 @@ jobs:
             file: ci/magic-modules/create-pr.yml
             params:
                 GITHUB_TOKEN: ((repo_access))
+                TERRAFORM_REPO: ((username))/terraform-provider-google
             on_failure:
               put: magic-modules-new-prs
               params:
@@ -124,7 +125,7 @@ jobs:
             params:
                 status: success
                 path: mm-initial-pr
-                comment: magic-modules-out/pr_comment
+                comment: magic-modules-with-comment/pr_comment
 
     - name: merge-prs
       plan:
