@@ -118,7 +118,7 @@ jobs:
           - put: magic-modules
             params:
                 branch_file: mm-initial-pr/.git/branch
-                repository: magic-modules-out
+                repository: magic-modules
                 only_if_diff: true
           - put: magic-modules-new-prs
             params:
