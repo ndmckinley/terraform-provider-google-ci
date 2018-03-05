@@ -11,13 +11,14 @@ set -x
 set -e
 
 # Create $GOPATH structure - in order to successfully run Terraform codegen, we need to run
-# it from within a correctly-set-up $GOPATH.  It calls out to `goimports`, which means that
+# it with a correctly-set-up $GOPATH.  It calls out to `goimports`, which means that
 # we need to have all the dependencies correctly downloaded.
 mkdir -p "${GOPATH}/src/github.com/terraform-providers"
 
 pushd magic-modules
 git submodule update --init build/terraform
-ln -s "./build/terraform/" "${GOPATH}/src/github.com/terraform-providers/terraform-provider-google"
+ln -s "${PWD}/build/terraform/" "${GOPATH}/src/github.com/terraform-providers/terraform-provider-google"
+popd
 
 pushd "${GOPATH}/src/github.com/terraform-providers/terraform-provider-google"
 
@@ -25,11 +26,12 @@ go get
 
 popd
 
+pushd magic-modules
 # We're going to use the short commit sha of the git repo's head as the branch name for the generated code.
 BRANCH=$(git rev-parse --short HEAD)
 
 bundle install
-bundle exec compiler -p products/compute -e terraform -o "${GOPATH}/src/github.com/terraform-providers/terraform-provider-google/"
+bundle exec compiler -p products/compute -e terraform -o build/terraform
 
 pushd "build/terraform"
 git add -A
@@ -55,3 +57,4 @@ git commit -m "update terraform." || true  # don't crash if no changes
 git checkout -B "$BRANCH"
 
 cp -r ./ "${WORKDIR}/mm-output/"
+popd
